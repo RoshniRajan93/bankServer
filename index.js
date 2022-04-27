@@ -44,13 +44,20 @@ app.delete('/',(req,res)=>{
 // Register API
     app.post('/register',(req,res)=>{
         const result=dataService.register(req.body.uname,req.body.acno,req.body.password)
-        if(result){
-            res.send("Successfully Registered...")
-        }
-        else{
-            res.send("Account Number already exist...")
-        }
+        res.status(result.statusCode).json(result)
     })
+
+// Login API
+    app.post('/login',(req,res)=>{
+        const result=dataService.login(req.body.acno,req.body.pswd)
+        res.status(result.statusCode).json(result)
+    })
+
+// Deposit API
+app.post('/deposit',(req,res)=>{
+    const result=dataService.deposit(req.body.acno,req.body.pswd,req.body.amnt)
+    res.status(result.statusCode).json(result)
+})
 
 // set port number
 app.listen(3000,()=>{
