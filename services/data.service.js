@@ -1,3 +1,6 @@
+// import jsonwebtoken
+const jwt=require('jsonwebtoken')
+
 // database
 database = {
     1000: { acno: 1000, uname: "Niya", password: 1000, balance: 5000, transaction: [] },
@@ -40,14 +43,19 @@ const login=(acno,pswd)=>{
   //user entered acno n pswd
   if(acno in database){
     if(pswd==database[acno]["password"]){
-      
       currentUser=database[acno]["uname"]
       currentAcno=acno
-      // already exist in db
+      // token generate
+      const token=jwt.sign({
+        currentAcno:acno
+      },'secretkey0123456789')
       return {
         statusCode:200,
         status:true,
-        message:"Login Successfull......."
+        message:"Login Successfull.......",
+        token,
+        currentAcno,
+        currentUser
       }
     }
     else{
@@ -67,9 +75,8 @@ const login=(acno,pswd)=>{
   }   
 }
 
-//deposit
+// deposit
 const deposit=(acno,pswd,amnt)=>{
-
   var amount=parseInt(amnt)
   if(acno in database){
     if(pswd==database[acno]["password"]){
@@ -101,9 +108,71 @@ const deposit=(acno,pswd,amnt)=>{
   }
 }
 
+// withdraw
+  const withdraw=(acno,pswd,amnt)=>{
+    var amount=parseInt(amnt)
+    if(acno in database){
+      if(pswd==database[acno]["password"]){
+        if(database[acno]["balance"]>amount){
+          database[acno]["balance"]-=amount
+          database[acno]["transaction"].push({
+            type:"DEBIT",
+            amount:amount
+          })
+          return{
+            statusCode:200,
+            status:true,
+            message:"Successfully debitted.... And new balance is :"+database[acno]["balance"]
+          }
+        }
+        else{
+          return {
+            statusCode:422,
+            status:false,
+            message:"Insufficient balance....."
+          }
+        }
+      }
+      else{
+        return {
+          statusCode:422,
+          status:false,
+          message:"Incorrect Password....."
+        }
+      }
+    }
+    else{
+      return {
+        statusCode:401,
+        status:false,
+        message:"User dosenot exist...."
+      }
+    }
+  }
+
+// transaction
+  const transaction=(acno)=>{
+    if(acno in database){
+      return {
+        statusCode:200,
+        status:true,
+        transaction:database[acno].transaction
+      }
+    }
+    else{
+      return {
+        statusCode:401,
+        status:false,
+        message:"User dosenot exist...."
+      }
+    }
+  }
+  
 // export
-module.exports={
-    register,
-    login,
-    deposit
-}
+  module.exports={
+        register,
+        login,
+        deposit,
+        withdraw,
+        transaction
+    }
