@@ -1,5 +1,9 @@
 // import jsonwebtoken
+const req = require('express/lib/request')
 const jwt=require('jsonwebtoken')
+
+// import db
+const db=require('./db')
 
 // database
 database = {
@@ -11,7 +15,10 @@ database = {
 // register - index.js will give uname,acno,password
 const  register = ( uname, acno, password ) => {
 
-    if(acno in database){
+  // aynchronous 
+  return db.User.findOne({acno})
+  .then(user=>{
+    if(user){
       // already exist acno
       return {
         statusCode:401,
@@ -20,27 +27,26 @@ const  register = ( uname, acno, password ) => {
       }
     }
     else{
-      // add details into db
-      database[acno]={
+      const newUser=new db.User({
         acno,
         uname,
         password,
-        balance:0,
-        transaction:[]
-      }
-      console.log(database);
+        balance: 0,
+        transaction: []
+      })
+      newUser.save()
       return {
         statusCode:200,
         status:true,
         message:"Successfully Registered... Please Login..."
       }
-      
     }
+  })
 }
 
-//login
+// login
 const login=(acno,pswd)=>{
-  //user entered acno n pswd
+  // user entered acno n pswd
   if(acno in database){
     if(pswd==database[acno]["password"]){
       currentUser=database[acno]["uname"]
@@ -48,7 +54,7 @@ const login=(acno,pswd)=>{
       // token generate
       const token=jwt.sign({
         currentAcno:acno
-      },'secretkey0123456789')
+      },'SecretKey0123456789')
       return {
         statusCode:200,
         status:true,
@@ -113,6 +119,13 @@ const deposit=(acno,pswd,amnt)=>{
     var amount=parseInt(amnt)
     if(acno in database){
       if(pswd==database[acno]["password"]){
+        if(req.currentAcno!=acno){
+          return {
+            statusCode:422,
+            status:false,
+            message:"Operation Denied....."
+          }
+        }
         if(database[acno]["balance"]>amount){
           database[acno]["balance"]-=amount
           database[acno]["transaction"].push({

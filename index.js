@@ -47,8 +47,9 @@
 // jwtMiddleware
     const jwtMiddleware=(req,res,next)=>{
         try{
-            const token=req.body.token
-            const data=jwt.verify(token,'secretkey0123456789')
+            const token=req.headers["x-access-token"]
+            const data=jwt.verify(token,'SecretKey0123456789')
+            req.currentAcno=data.currentAcno
             next()
         }
         catch{
@@ -61,8 +62,10 @@
 
 // Register API
     app.post('/register',(req,res)=>{
-        const result=dataService.register(req.body.uname,req.body.acno,req.body.password)
-        res.status(result.statusCode).json(result)
+        dataService.register(req.body.uname,req.body.acno,req.body.password)
+        .then(result=>{
+            res.status(result.statusCode).json(result)
+        })
     })
 
 // Login API
@@ -79,7 +82,7 @@
 
 // Withdraw API - Router Specific Middleware: jwtMiddleware
     app.post('/withdraw',jwtMiddleware,(req,res)=>{
-        const result=dataService.withdraw(req.body.acno,req.body.pswd,req.body.amnt)
+        const result=dataService.withdraw(req,req.body.acno,req.body.pswd,req.body.amnt)
         res.status(result.statusCode).json(result)
     })
 
