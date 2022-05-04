@@ -46,10 +46,10 @@ const  register = ( uname, acno, password ) => {
 
 // login
 const login=(acno,pswd)=>{
-  // user entered acno n pswd
-  if(acno in database){
-    if(pswd==database[acno]["password"]){
-      currentUser=database[acno]["uname"]
+  return db.User.findOne({acno,password:pswd})
+  .then(user=>{
+    if(user){
+      currentUser=user.uname
       currentAcno=acno
       // token generate
       const token=jwt.sign({
@@ -59,26 +59,19 @@ const login=(acno,pswd)=>{
         statusCode:200,
         status:true,
         message:"Login Successfull.......",
-        token,
         currentAcno,
-        currentUser
+        currentUser,
+        token
       }
     }
     else{
       return {
-        statusCode:422,
+        statusCode:401,
         status:false,
-        message:"Incorrect Password....."
+        message:"Invalid Credentials!!!"
       }
     }
-  }
-  else{
-    return {
-      statusCode:401,
-      status:false,
-      message:"User dosenot exist...."
-    }
-  }   
+  })  
 }
 
 // deposit

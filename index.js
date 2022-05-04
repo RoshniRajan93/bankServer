@@ -70,8 +70,10 @@
 
 // Login API
     app.post('/login',(req,res)=>{
-        const result=dataService.login(req.body.acno,req.body.pswd)
-        res.status(result.statusCode).json(result)
+        dataService.login(req.body.acno,req.body.pswd)
+        .then(result=>{
+            res.status(result.statusCode).json(result)
+        })  
     })
 
 // Deposit API - Router Specific Middleware: jwtMiddleware
