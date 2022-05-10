@@ -77,63 +77,60 @@ const login=(acno,pswd)=>{
 // deposit
 const deposit=(acno,pswd,amnt)=>{
   var amount=parseInt(amnt)
-  if(acno in database){
-    if(pswd==database[acno]["password"]){
-      database[acno]["balance"]+=amount
-      database[acno]["transaction"].push({
+  return db.User.findOne({acno,password:pswd})
+  .then(user=>{
+    if(user){
+      user.balance+=amount
+      user.transaction.push({
         type:"CREDIT",
         amount:amount
       })
+      user.save()
       return {
         statusCode:200,
         status:true,
-        message:"Successfully deposited.... And new balance is :"+database[acno]["balance"]
+        message:"Successfully deposited.... And new balance is :"+ user.balance
       }
     }
     else{
       return {
-        statusCode:422,
+        statusCode:401,
         status:false,
-        message:"Incorrect Password....."
+        message:"Invalid Credentials!!!"
       }
     }
-  }
-  else{
-    return {
-      statusCode:401,
-      status:false,
-      message:"User dosenot exist...."
-    }
-  }
+  })
 }
 
 // withdraw
-  const withdraw=(acno,pswd,amnt)=>{
+  const withdraw=(req,acno,pswd,amnt)=>{
     var amount=parseInt(amnt)
-    if(acno in database){
-      if(pswd==database[acno]["password"]){
-        if(req.currentAcno!=acno){
-          return {
-            statusCode:422,
-            status:false,
-            message:"Operation Denied....."
-          }
+    return db.User.findOne({acno,password:pswd})
+    .then(user=>{
+      if(req.currentAcno!=acno){
+        return {
+          statusCode:422,
+          status:false,
+          message:"Operation Denied....."
         }
-        if(database[acno]["balance"]>amount){
-          database[acno]["balance"]-=amount
-          database[acno]["transaction"].push({
+      }
+      if(user){
+        if(user.balance>amount){
+          user.balance-=amount
+          user.transaction.push({
             type:"DEBIT",
             amount:amount
           })
+          user.save()
           return{
             statusCode:200,
             status:true,
-            message:"Successfully debitted.... And new balance is :"+database[acno]["balance"]
+            message:"Successfully debitted.... And new balance is :"+ user.balance
           }
         }
         else{
           return {
-            statusCode:422,
+            statusCode:401,
             status:false,
             message:"Insufficient balance....."
           }
@@ -141,37 +138,54 @@ const deposit=(acno,pswd,amnt)=>{
       }
       else{
         return {
-          statusCode:422,
+          statusCode:401,
           status:false,
-          message:"Incorrect Password....."
+          message:"Invalid Credentials!!!"
         }
       }
-    }
-    else{
-      return {
-        statusCode:401,
-        status:false,
-        message:"User dosenot exist...."
-      }
-    }
+    })
   }
-
+   
 // transaction
   const transaction=(acno)=>{
-    if(acno in database){
-      return {
-        statusCode:200,
-        status:true,
-        transaction:database[acno].transaction
+    return db.User.findOne({acno})
+    .then(user=>{
+      if(user){
+        return {
+          statusCode:200,
+          status:true,
+          transaction:user.transaction
+        }
       }
-    }
-    else{
-      return {
-        statusCode:401,
-        status:false,
-        message:"User dosenot exist...."
+      else{
+        return {
+          statusCode:401,
+          status:false,
+          message:"User dosenot exist...."
+        }
       }
-    }
+    })
+  }
+
+// delete Acc
+  const deleteAcc=(acno)=>{
+    return db.User.deleteOne({acno})
+    .then(user=>{
+      if(!user){
+        return{
+          statusCode:401,
+          status:false,
+          message:"Operation Failed..."
+        }
+      }
+      else{
+        return{
+          statusCode:200,
+          status:true,
+          message:"Account Number"+acno+"deleted Successfully..."
+        }
+      }
+    })
   }
   
 // export
@@ -180,5 +194,6 @@ const deposit=(acno,pswd,amnt)=>{
         login,
         deposit,
         withdraw,
-        transaction
+        transaction,
+        deleteAcc
     }

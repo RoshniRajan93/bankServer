@@ -9,9 +9,16 @@
 // import jsonwebtoken
     const jwt=require('jsonwebtoken')
 
+// import cors
+    const cors=require('cors')
+
 // create server app using express
     const app=express()
 
+// use cors
+    app.use(cors({
+        origin:'http://localhost:4200'
+    }))
 // to parse json data
     app.use(express.json())
 
@@ -54,6 +61,7 @@
         }
         catch{
             res.status(401).json({
+                statusCode:401,
                 status:false,
                 message:"Please Login..."
             })
@@ -78,20 +86,34 @@
 
 // Deposit API - Router Specific Middleware: jwtMiddleware
     app.post('/deposit',jwtMiddleware,(req,res)=>{
-        const result=dataService.deposit(req.body.acno,req.body.pswd,req.body.amnt)
-        res.status(result.statusCode).json(result)
+        dataService.deposit(req.body.acno,req.body.pswd,req.body.amnt)
+        .then(result=>{
+            res.status(result.statusCode).json(result)
+        })
     })
 
 // Withdraw API - Router Specific Middleware: jwtMiddleware
     app.post('/withdraw',jwtMiddleware,(req,res)=>{
-        const result=dataService.withdraw(req,req.body.acno,req.body.pswd,req.body.amnt)
-        res.status(result.statusCode).json(result)
+        dataService.withdraw(req,req.body.acno,req.body.pswd,req.body.amnt)
+        .then(result=>{
+            res.status(result.statusCode).json(result)
+        }) 
     })
 
 // Transaction API - Router Specific Middleware: jwtMiddleware
     app.post('/transaction',jwtMiddleware,(req,res)=>{
-        const result=dataService.transaction(req.body.acno)
-        res.status(result.statusCode).json(result)
+        dataService.transaction(req.body.acno)
+        .then(result=>{
+            res.status(result.statusCode).json(result)
+        }) 
+    })
+
+// onDelete API
+    app.delete('/onDelete/:acno',jwtMiddleware,(req,res)=>{
+        dataService.transaction(req.body.acno)
+        .then(result=>{
+            res.status(result.statusCode).json(result)
+        }) 
     })
 
 // set port number
