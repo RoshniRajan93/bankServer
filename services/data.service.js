@@ -167,7 +167,7 @@ const deposit=(acno,pswd,amnt)=>{
     })
   }
 
-// delete Acc
+// deleteAcc
   const deleteAcc=(acno)=>{
     return db.User.deleteOne({acno})
     .then(user=>{
